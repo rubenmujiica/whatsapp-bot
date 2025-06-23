@@ -13,7 +13,7 @@ def whatsapp():
     try:
         res = requests.post(
             "https://www.chatbase.co/api/v1/chat",
-            headers={"Authorization": f"Bearer {CHATBASE_API_KEY}"},
+            headers={"Authorization": f"Bearer s1a31qb7zxj729n5bs03maetnftd0w5q"},
             json={
                 "chatbot_id": CHATBOT_ID,
                 "messages": [{"role": "user", "content": incoming_msg}],
