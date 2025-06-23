@@ -8,26 +8,33 @@ CHATBOT_ID = "sBI09bpZvhDSPHIoIy08l"
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
-    incoming_msg = request.values.get('Body', '')
-    sender = request.values.get('From', '')
+    incoming_msg = request.values.get('Body', '').strip()
 
-    # Enviar mensaje a Chatbase
-    res = requests.post(
-        "https://www.chatbase.co/api/v1/chat",
-        headers={"Authorization": f"Bearer {CHATBASE_API_KEY}"},
-        json={
-            "messages": [{"content": incoming_msg, "role": "user"}],
-            "chatbot_id": CHATBOT_ID
-        }
-    )
+    try:
+        res = requests.post(
+            "https://www.chatbase.co/api/v1/chat",
+            headers={"Authorization": f"Bearer {CHATBASE_API_KEY}"},
+            json={
+                "chatbot_id": CHATBOT_ID,
+                "messages": [{"role": "user", "content": incoming_msg}],
+                "language": "es"
+            },
+            timeout=10
+        )
+        res.raise_for_status()
+        data = res.json()
+        bot_message = data.get("messages")[0]["content"]  # Asumimos que siempre hay mensajes
+    except Exception as e:
+        print("Error la recepción del mensaje:", e)
+        bot_message = "Ha ocurrido un error. Por favor, inténtalo de nuevo."
 
-    reply = res.json().get("messages", [{"content": "Lo siento, no pude entenderte."}])[0]["content"]
-
-    # Respuesta XML para Twilio
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
+    response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Message>{reply}</Message>
-</Response>""", 200, {'Content-Type': 'text/xml'}
+    <Message>{bot_message}</Message>
+</Response>"""
+
+    return response_xml, 200, {'Content-Type': 'text/xml'}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
